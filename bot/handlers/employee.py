@@ -6,7 +6,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from bot.config import CURRENCIES, CURRENCY_BY_COMMAND
-from bot.handlers.common import is_admin, is_group
+from bot.handlers.common import is_admin, is_group, is_work_chat
 from bot.models import async_session
 from bot.services import AccessWindowService, OperationService
 from bot.utils import format_amount, parse_amount
@@ -34,16 +34,21 @@ async def _handle_currency_command(message: Message, command_text: str) -> None:
         await message.reply("Некорректная сумма. Укажите целое число.")
         return
 
-    # Check access for non-admins in group chats
-    if is_group(message) and not is_admin(message.from_user):
-        async with async_session() as session:
+    user = message.from_user
+    async with async_session() as session:
+        in_work_chat = await is_work_chat(message, session)
+
+        # In group chat: only allow in the registered work chat
+        if is_group(message) and not in_work_chat:
+            return
+
+        # Check access window for non-admins in work chat
+        if in_work_chat and not is_admin(user):
             access_svc = AccessWindowService(session)
             if not await access_svc.is_access_open():
                 await message.reply("Доступ на внесение операций сейчас закрыт.")
                 return
 
-    user = message.from_user
-    async with async_session() as session:
         op_svc = OperationService(session)
         operation, new_balance = await op_svc.create_operation(
             telegram_user_id=user.id,
@@ -58,7 +63,7 @@ async def _handle_currency_command(message: Message, command_text: str) -> None:
     formatted = format_amount(amount)
 
     # In group chat — short confirmation only
-    if is_group(message):
+    if in_work_chat:
         await message.reply(f"✅ Запомнил. {formatted}")
     else:
         # Private chat (admin) — can show balance
