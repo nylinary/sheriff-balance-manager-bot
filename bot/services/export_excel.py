@@ -42,25 +42,27 @@ def build_excel(operations: list[Operation]) -> tuple[io.BytesIO, str]:
         created = op.created_at
         if created and created.tzinfo:
             created = created.astimezone(tz)
-        ws.append([  # type: ignore[union-attr]
-            op.id,
-            op.operation_id,
-            created.strftime("%d.%m.%Y %H:%M") if created else "",
-            op.currency_code,
-            op.currency_title,
-            op.amount,
-            "+" if op.amount >= 0 else "-",
-            op.operation_type.value if op.operation_type else "",
-            op.telegram_user_id,
-            op.username,
-            op.full_name,
-            op.chat_id,
-            op.chat_type,
-            op.is_reverted,
-            op.reverted_operation_id,
-            op.revert_parent_operation_id,
-            op.role_snapshot,
-        ])
+        ws.append(
+            [  # type: ignore[union-attr]
+                op.id,
+                op.operation_id,
+                created.strftime("%d.%m.%Y %H:%M") if created else "",
+                op.currency_code,
+                op.currency_title,
+                op.amount,
+                "+" if op.amount >= 0 else "-",
+                op.operation_type.value if op.operation_type else "",
+                op.telegram_user_id,
+                op.username,
+                op.full_name,
+                op.chat_id,
+                op.chat_type,
+                op.is_reverted,
+                op.reverted_operation_id,
+                op.revert_parent_operation_id,
+                op.role_snapshot,
+            ]
+        )
 
     buf = io.BytesIO()
     wb.save(buf)

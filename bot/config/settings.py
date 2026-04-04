@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_usernames(cls, v: list[str]) -> list[str]:
         return [u.lstrip("@").lower() for u in v]
+
     timezone: str = "Europe/Moscow"
 
     # History pagination

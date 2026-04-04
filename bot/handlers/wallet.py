@@ -1,4 +1,5 @@
 """Wallet display — admin only, private chat only."""
+
 from __future__ import annotations
 
 from aiogram import Router

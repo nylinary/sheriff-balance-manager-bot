@@ -13,12 +13,16 @@ class SettingsRepo:
         self.session = session
 
     async def get(self, key: str) -> str | None:
-        result = await self.session.execute(select(BotSetting).where(BotSetting.key == key))
+        result = await self.session.execute(
+            select(BotSetting).where(BotSetting.key == key)
+        )
         row = result.scalar_one_or_none()
         return row.value if row else None
 
     async def set(self, key: str, value: str) -> None:
-        result = await self.session.execute(select(BotSetting).where(BotSetting.key == key))
+        result = await self.session.execute(
+            select(BotSetting).where(BotSetting.key == key)
+        )
         row = result.scalar_one_or_none()
         if row is None:
             self.session.add(BotSetting(key=key, value=value))
@@ -27,7 +31,9 @@ class SettingsRepo:
         await self.session.flush()
 
     async def delete(self, key: str) -> None:
-        result = await self.session.execute(select(BotSetting).where(BotSetting.key == key))
+        result = await self.session.execute(
+            select(BotSetting).where(BotSetting.key == key)
+        )
         row = result.scalar_one_or_none()
         if row:
             await self.session.delete(row)

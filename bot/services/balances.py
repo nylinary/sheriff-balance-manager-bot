@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.config import CURRENCIES, CURRENCY_BY_CODE
+from bot.config import CURRENCIES
 from bot.models.balance import Balance
 from bot.repositories import BalanceRepo
 from bot.utils import format_unsigned

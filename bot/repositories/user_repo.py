@@ -21,7 +21,9 @@ class UserRepo:
         result = await self.session.execute(stmt)
         user = result.scalar_one_or_none()
 
-        role = UserRole.admin if telegram_id in settings.admin_ids else UserRole.employee
+        role = (
+            UserRole.admin if telegram_id in settings.admin_ids else UserRole.employee
+        )
 
         if user is None:
             user = User(

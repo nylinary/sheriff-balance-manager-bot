@@ -1,4 +1,5 @@
 """Admin-only handlers: revert, export."""
+
 from __future__ import annotations
 
 import re
@@ -10,7 +11,7 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from bot.handlers.common import is_admin, is_private
 from bot.models import async_session
 from bot.repositories import OperationRepo
-from bot.services import BalanceService, OperationService
+from bot.services import OperationService
 from bot.services.export_excel import build_excel
 from bot.utils import format_amount
 
@@ -59,6 +60,7 @@ async def cb_revert(callback: CallbackQuery) -> None:
 
 
 # ── Excel export ──────────────────────────────────────────────────
+
 
 @router.message(Command("выгрузка", "excel"))
 async def cmd_export(message: Message) -> None:

@@ -1,4 +1,5 @@
 """Access window management — admin only."""
+
 from __future__ import annotations
 
 from aiogram import Router
@@ -22,12 +23,16 @@ async def cmd_open_access(message: Message) -> None:
 
     args = (message.text or "").split(maxsplit=1)
     if len(args) < 2:
-        await message.reply("Неверный формат времени. Используйте: /открытьд 19:00-22:00")
+        await message.reply(
+            "Неверный формат времени. Используйте: /открытьд 19:00-22:00"
+        )
         return
 
     parsed = parse_time_range(args[1])
     if parsed is None:
-        await message.reply("Неверный формат времени. Используйте: /открытьд 19:00-22:00")
+        await message.reply(
+            "Неверный формат времени. Используйте: /открытьд 19:00-22:00"
+        )
         return
 
     time_from, time_to = parsed

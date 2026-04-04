@@ -1,10 +1,11 @@
 """History browsing with inline pagination — admin only, private chat."""
+
 from __future__ import annotations
 
 import re
 import zoneinfo
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -25,6 +26,7 @@ class PageInputState(StatesGroup):
 
 
 # ── /история ──────────────────────────────────────────────────────
+
 
 @router.message(Command("история"))
 async def cmd_history(message: Message, state: FSMContext) -> None:
@@ -189,6 +191,7 @@ async def cb_open_operation(callback: CallbackQuery) -> None:
 
 
 # ── Noop callback ─────────────────────────────────────────────────
+
 
 @router.callback_query(lambda c: c.data == "h:noop")
 async def cb_noop(callback: CallbackQuery) -> None:

@@ -90,7 +90,9 @@ class OperationService:
 
         await self.op_repo.mark_reverted(original.operation_id, revert_op.operation_id)
 
-        balance = await self.balance_repo.update_amount(original.currency_code, reverse_amount)
+        balance = await self.balance_repo.update_amount(
+            original.currency_code, reverse_amount
+        )
         await self.session.commit()
 
         # Refresh original to get updated is_reverted

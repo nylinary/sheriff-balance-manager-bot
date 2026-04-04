@@ -1,10 +1,16 @@
 """Handle bot being added/removed from group chats."""
+
 from __future__ import annotations
 
 import logging
 
 from aiogram import Bot, Router
-from aiogram.filters import ChatMemberUpdatedFilter, IS_NOT_MEMBER, MEMBER, ADMINISTRATOR
+from aiogram.filters import (
+    ChatMemberUpdatedFilter,
+    IS_NOT_MEMBER,
+    MEMBER,
+    ADMINISTRATOR,
+)
 from aiogram.types import ChatMemberUpdated
 
 from bot.handlers.common import is_admin
@@ -15,7 +21,11 @@ router = Router(name="chat_manage")
 logger = logging.getLogger(__name__)
 
 
-@router.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=IS_NOT_MEMBER >> (MEMBER | ADMINISTRATOR)))
+@router.my_chat_member(
+    ChatMemberUpdatedFilter(
+        member_status_changed=IS_NOT_MEMBER >> (MEMBER | ADMINISTRATOR)
+    )
+)
 async def on_bot_added(event: ChatMemberUpdated, bot: Bot) -> None:
     """Bot was added to a group chat."""
     if event.chat.type not in ("group", "supergroup"):
@@ -29,7 +39,9 @@ async def on_bot_added(event: ChatMemberUpdated, bot: Bot) -> None:
             event.from_user.username,
             event.chat.id,
         )
-        await bot.send_message(event.chat.id, "Только администратор бота может добавить меня в чат.")
+        await bot.send_message(
+            event.chat.id, "Только администратор бота может добавить меня в чат."
+        )
         await bot.leave_chat(event.chat.id)
         return
 
@@ -39,10 +51,16 @@ async def on_bot_added(event: ChatMemberUpdated, bot: Bot) -> None:
         await session.commit()
 
     logger.info("Work chat set to %s by admin %s", event.chat.id, event.from_user.id)
-    await bot.send_message(event.chat.id, f"✅ Рабочий чат установлен (ID: {event.chat.id}).")
+    await bot.send_message(
+        event.chat.id, f"✅ Рабочий чат установлен (ID: {event.chat.id})."
+    )
 
 
-@router.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=(MEMBER | ADMINISTRATOR) >> IS_NOT_MEMBER))
+@router.my_chat_member(
+    ChatMemberUpdatedFilter(
+        member_status_changed=(MEMBER | ADMINISTRATOR) >> IS_NOT_MEMBER
+    )
+)
 async def on_bot_removed(event: ChatMemberUpdated) -> None:
     """Bot was removed from a group chat."""
     async with async_session() as session:

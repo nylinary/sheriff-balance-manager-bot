@@ -1,4 +1,5 @@
 """Handlers for currency operation commands (available in group chat)."""
+
 from __future__ import annotations
 
 from aiogram import Router
