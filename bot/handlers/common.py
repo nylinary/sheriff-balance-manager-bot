@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from aiogram import Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, User
@@ -9,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.config import CURRENCIES, settings
 from bot.repositories.settings_repo import SettingsRepo
+
+logger = logging.getLogger(__name__)
 
 router = Router(name="common")
 
@@ -55,6 +59,10 @@ async def cmd_currencies(message: Message) -> None:
 def is_admin(user: User | None) -> bool:
     if user is None:
         return False
+    logger.info(
+        "is_admin check: id=%s, username=%r, admin_ids=%s, admin_usernames=%s",
+        user.id, user.username, settings.admin_ids, settings.admin_usernames,
+    )
     if user.id in settings.admin_ids:
         return True
     if user.username and user.username.lower() in settings.admin_usernames:
