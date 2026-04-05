@@ -15,35 +15,40 @@ router = Router(name="common")
 
 @router.message(CommandStart())
 async def cmd_start(message: Message) -> None:
+    if not is_private(message):
+        return
+
+    if not is_admin(message.from_user):
+        await message.answer("У вас нет доступа к этому боту.")
+        return
+
     currency_lines = "\n".join(
-        f"  /{c.command} [сумма] — {c.emoji} {c.title}" for c in CURRENCIES
+        f"  {c.emoji} {c.title} — <code>/{c.command}</code>" for c in CURRENCIES
     )
-    admin_section = ""
-    if is_admin(message.from_user):
-        admin_section = (
-            "\n\n🔑 <b>Команды администратора:</b>\n"
-            "  /кошелек — текущие балансы\n"
-            "  /история — история операций\n"
-            "  /выгрузка — выгрузка в Excel"
-        )
 
     text = (
         "👋 Добро пожаловать в <b>Sheriff Balance Manager</b>!\n\n"
         "Бот для учёта мультивалютных операций.\n\n"
-        f"💰 <b>Внесение операций:</b>\n{currency_lines}\n\n"
-        "📋 /счета — список доступных валют\n\n"
-        f"Положительная сумма — приход, отрицательная — расход."
-        f"{admin_section}"
+        f"💰 <b>Внесение операций</b> (после команды укажите сумму):\n{currency_lines}\n\n"
+        "<code>/счета</code> — список доступных валют\n\n"
+        "Положительная сумма — приход, отрицательная — расход.\n\n"
+        "🔑 <b>Управление:</b>\n"
+        "  <code>/кошелек</code> — текущие балансы\n"
+        "  <code>/история</code> — история операций\n"
+        "  <code>/выгрузка</code> — выгрузка в Excel"
     )
     await message.answer(text, parse_mode="HTML")
 
 
 @router.message(Command("счета"))
 async def cmd_currencies(message: Message) -> None:
+    if is_private(message) and not is_admin(message.from_user):
+        return
+
     lines = "\n".join(
-        f"{c.emoji} <b>{c.title}</b> — /{c.command} [сумма]" for c in CURRENCIES
+        f"{c.emoji} <b>{c.title}</b> — <code>/{c.command}</code>" for c in CURRENCIES
     )
-    text = f"💰 <b>Доступные валюты:</b>\n\n{lines}"
+    text = f"💰 <b>Доступные валюты:</b>\n\n{lines}\n\nПосле команды укажите сумму."
     await message.answer(text, parse_mode="HTML")
 
 

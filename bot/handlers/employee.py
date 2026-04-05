@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from bot.config import CURRENCIES, CURRENCY_BY_COMMAND
-from bot.handlers.common import is_group, is_work_chat
+from bot.handlers.common import is_admin, is_group, is_private, is_work_chat
 from bot.models import async_session
 from bot.services import OperationService
 from bot.utils import format_amount, parse_amount
@@ -34,6 +34,10 @@ async def _handle_currency_command(message: Message, command_text: str) -> None:
         return
 
     if not message.from_user:
+        return
+
+    # Private chat — admin only
+    if is_private(message) and not is_admin(message.from_user):
         return
 
     args = message.text or ""
