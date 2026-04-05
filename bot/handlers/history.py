@@ -141,10 +141,6 @@ _OP_RE = re.compile(r"^h:op:(\d+)$")
 
 @router.callback_query(lambda c: c.data and c.data.startswith("h:op:"))
 async def cb_open_operation(callback: CallbackQuery) -> None:
-    if not is_admin(callback.from_user):
-        await callback.answer("У вас нет доступа.", show_alert=True)
-        return
-
     m = _OP_RE.match(callback.data or "")
     if not m:
         await callback.answer()
@@ -172,6 +168,10 @@ async def cb_open_operation(callback: CallbackQuery) -> None:
     status = "откатана" if op.is_reverted else "активна"
     uname = f"@{op.username}" if op.username else "—"
 
+    revert_info = ""
+    if op.revert_parent_operation_id:
+        revert_info = f"\nОткат операции: #{op.revert_parent_operation_id}"
+
     text = (
         f"ID операции: {op.operation_id}\n"
         f"Дата: {date_str}\n"
@@ -181,11 +181,15 @@ async def cb_open_operation(callback: CallbackQuery) -> None:
         f"Валюта: {cur_title}\n"
         f"Сумма: {format_amount(op.amount)}\n"
         f"Тип: {op.operation_type.value}\n"
-        f"Chat ID: {op.chat_id}\n"
         f"Статус: {status}"
+        f"{revert_info}"
     )
 
-    kb = operation_card_keyboard(op.operation_id, op.is_reverted)
+    kb = operation_card_keyboard(
+        op.operation_id,
+        op.is_reverted,
+        is_admin_user=is_admin(callback.from_user),
+    )
     await callback.message.answer(text, reply_markup=kb)  # type: ignore[union-attr]
     await callback.answer()
 

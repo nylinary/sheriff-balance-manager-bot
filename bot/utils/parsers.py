@@ -19,7 +19,8 @@ _TIME_RE = re.compile(r"^(\d{1,2})[:.](\d{2})\s*-\s*(\d{1,2})[:.](\d{2})$")
 
 
 def parse_time_range(text: str) -> tuple[time, time] | None:
-    m = _TIME_RE.match(text.strip())
+    cleaned = text.strip().replace("\u2013", "-").replace("\u2014", "-")
+    m = _TIME_RE.match(cleaned)
     if not m:
         return None
     try:

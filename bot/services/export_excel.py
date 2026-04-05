@@ -10,23 +10,23 @@ from bot.models.operation import Operation
 from bot.utils.time import now
 
 COLUMNS = [
-    "internal_id",
-    "operation_id",
-    "created_at",
-    "currency_code",
-    "currency_title",
-    "amount",
-    "sign",
-    "operation_type",
-    "telegram_user_id",
-    "username",
-    "full_name",
-    "chat_id",
-    "chat_type",
-    "is_reverted",
-    "reverted_operation_id",
-    "revert_parent_operation_id",
-    "role_snapshot",
+    "ID",
+    "№ операции",
+    "Дата",
+    "Код валюты",
+    "Валюта",
+    "Сумма",
+    "Знак",
+    "Тип операции",
+    "Telegram ID",
+    "Имя пользователя",
+    "Полное имя",
+    "ID чата",
+    "Тип чата",
+    "Откатана",
+    "ID отката",
+    "ID родительской операции",
+    "Роль",
 ]
 
 
@@ -34,7 +34,7 @@ def build_excel(operations: list[Operation]) -> tuple[io.BytesIO, str]:
     tz = zoneinfo.ZoneInfo(settings.timezone)
     wb = Workbook()
     ws = wb.active
-    ws.title = "Operations"  # type: ignore[union-attr]
+    ws.title = "Операции"  # type: ignore[union-attr]
 
     ws.append(COLUMNS)  # type: ignore[union-attr]
 

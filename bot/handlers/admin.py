@@ -1,4 +1,4 @@
-"""Admin-only handlers: revert, export."""
+"""Admin-only handlers: revert (admin or owner), export."""
 
 from __future__ import annotations
 
@@ -18,15 +18,16 @@ from bot.utils import format_amount
 router = Router(name="admin")
 
 
-# ── Revert via callback ──────────────────────────────────────────
+# ── Revert via callback (admin or operation owner) ───────────────
 
 _REV_RE = re.compile(r"^op:rev:(\d+)$")
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith("op:rev:"))
 async def cb_revert(callback: CallbackQuery) -> None:
-    if not is_admin(callback.from_user):
-        await callback.answer("У вас нет доступа.", show_alert=True)
+    user = callback.from_user
+    if not user:
+        await callback.answer()
         return
 
     m = _REV_RE.match(callback.data or "")
@@ -35,16 +36,17 @@ async def cb_revert(callback: CallbackQuery) -> None:
         return
 
     operation_id = int(m.group(1))
-    user = callback.from_user
+    admin = is_admin(user)
 
     async with async_session() as session:
         op_svc = OperationService(session)
         try:
             original, revert_op, new_balance = await op_svc.revert_operation(
                 operation_id,
-                admin_telegram_id=user.id,  # type: ignore[union-attr]
-                admin_username=user.username if user else None,
-                admin_full_name=user.full_name if user else None,
+                reverted_by_telegram_id=user.id,
+                reverted_by_username=user.username,
+                reverted_by_full_name=user.full_name,
+                only_own_user_id=None if admin else user.id,
             )
         except ValueError as e:
             await callback.answer(str(e), show_alert=True)
@@ -52,8 +54,8 @@ async def cb_revert(callback: CallbackQuery) -> None:
 
     text = (
         f"↩️ Операция #{operation_id} откатана.\n"
-        f"Создана обратная операция #{revert_op.operation_id}: {format_amount(revert_op.amount)}\n"
-        f"Новый баланс {original.currency_title}: {format_amount(new_balance)}"
+        f"Создана обратная операция #{revert_op.operation_id}: "
+        f"{format_amount(revert_op.amount)}"
     )
     await callback.message.answer(text)  # type: ignore[union-attr]
     await callback.answer()

@@ -56,35 +56,41 @@ class OperationService:
         self,
         operation_id: int,
         *,
-        admin_telegram_id: int,
-        admin_username: str | None,
-        admin_full_name: str | None,
+        reverted_by_telegram_id: int,
+        reverted_by_username: str | None,
+        reverted_by_full_name: str | None,
+        only_own_user_id: int | None = None,
     ) -> tuple[Operation, Operation, int]:
-        """Revert an operation. Returns (original_op, revert_op, new_balance).
+        """Create a revert operation for the given operation.
 
+        Returns (original_op, revert_op, new_balance).
+        If only_own_user_id is set, only allows reverting own operations.
         Raises ValueError if operation not found or already reverted.
         """
         original = await self.op_repo.get_by_operation_id(operation_id)
         if original is None:
             raise ValueError("Операция не найдена.")
+        if original.operation_type == OperationType.revert:
+            raise ValueError("Нельзя откатить операцию отката.")
         if original.is_reverted:
             raise ValueError("Операция уже откатана.")
+        if only_own_user_id is not None and original.telegram_user_id != only_own_user_id:
+            raise ValueError("Можно откатить только свою операцию.")
 
         reverse_amount = -original.amount
-        op_type = OperationType.revert
 
         revert_op = await self.op_repo.create(
-            telegram_user_id=admin_telegram_id,
-            username=admin_username,
-            full_name=admin_full_name,
-            role_snapshot="admin",
+            telegram_user_id=reverted_by_telegram_id,
+            username=reverted_by_username,
+            full_name=reverted_by_full_name,
+            role_snapshot="admin" if only_own_user_id is None else "employee",
             chat_id=0,
             chat_type="private",
             currency_code=original.currency_code,
             currency_title=original.currency_title,
             currency_command=original.currency_command,
             amount=reverse_amount,
-            operation_type=op_type,
+            operation_type=OperationType.revert,
             revert_parent_operation_id=original.operation_id,
         )
 
@@ -95,6 +101,5 @@ class OperationService:
         )
         await self.session.commit()
 
-        # Refresh original to get updated is_reverted
         refreshed = await self.op_repo.get_by_operation_id(original.operation_id)
         return refreshed or original, revert_op, balance.amount

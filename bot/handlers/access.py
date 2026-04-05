@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
+
 from aiogram import Router
 from aiogram.filters import Command
+from aiogram.filters.command import CommandObject
 from aiogram.types import Message
 
 from bot.handlers.common import is_admin, is_private
@@ -12,23 +15,25 @@ from bot.services import AccessWindowService
 from bot.utils import parse_time_range
 
 router = Router(name="access")
+logger = logging.getLogger(__name__)
 
 
 @router.message(Command("открытьд"))
-async def cmd_open_access(message: Message) -> None:
+async def cmd_open_access(message: Message, command: CommandObject) -> None:
     if not is_private(message) or not is_admin(message.from_user):
         if is_private(message):
             await message.reply("У вас нет доступа к этой команде.")
         return
 
-    args = (message.text or "").split(maxsplit=1)
-    if len(args) < 2:
+    arg_text = (command.args or "").strip()
+    logger.info("open_access raw args: %r", arg_text)
+    if not arg_text:
         await message.reply(
             "Неверный формат времени. Используйте: /открытьд 19:00-22:00"
         )
         return
 
-    parsed = parse_time_range(args[1])
+    parsed = parse_time_range(arg_text)
     if parsed is None:
         await message.reply(
             "Неверный формат времени. Используйте: /открытьд 19:00-22:00"
