@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.models.bot_settings import BotSetting
 
 WORK_CHAT_KEY = "work_chat_id"
+ADMIN_CHAT_KEY = "admin_chat_id"
 
 
 class SettingsRepo:
@@ -45,3 +46,10 @@ class SettingsRepo:
 
     async def set_work_chat_id(self, chat_id: int) -> None:
         await self.set(WORK_CHAT_KEY, str(chat_id))
+
+    async def get_admin_chat_id(self) -> int | None:
+        val = await self.get(ADMIN_CHAT_KEY)
+        return int(val) if val else None
+
+    async def set_admin_chat_id(self, chat_id: int) -> None:
+        await self.set(ADMIN_CHAT_KEY, str(chat_id))

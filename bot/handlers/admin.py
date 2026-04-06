@@ -8,7 +8,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
-from bot.handlers.common import is_admin, is_private
+from bot.handlers.common import is_admin, is_admin_chat, is_admin_context, is_private
 from bot.models import async_session
 from bot.repositories import OperationRepo
 from bot.services import OperationService
@@ -66,7 +66,10 @@ async def cb_revert(callback: CallbackQuery) -> None:
 
 @router.message(Command("выгрузка", "excel"))
 async def cmd_export(message: Message) -> None:
-    if not is_private(message) or not is_admin(message.from_user):
+    async with async_session() as session:
+        in_admin_chat = await is_admin_chat(message, session)
+
+    if not is_admin_context(message, in_admin_chat=in_admin_chat):
         if is_private(message):
             await message.reply("У вас нет доступа к этой команде.")
         return

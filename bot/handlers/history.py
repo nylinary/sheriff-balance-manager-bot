@@ -12,7 +12,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
 from bot.config import CURRENCY_BY_CODE, settings
-from bot.handlers.common import is_admin, is_private
+from bot.handlers.common import is_admin, is_admin_chat, is_admin_context, is_private
 from bot.keyboards import history_keyboard, operation_card_keyboard
 from bot.models import async_session
 from bot.services import HistoryService
@@ -30,7 +30,10 @@ class PageInputState(StatesGroup):
 
 @router.message(Command("история"))
 async def cmd_history(message: Message, state: FSMContext) -> None:
-    if not is_private(message) or not is_admin(message.from_user):
+    async with async_session() as session:
+        in_admin_chat = await is_admin_chat(message, session)
+
+    if not is_admin_context(message, in_admin_chat=in_admin_chat):
         if is_private(message):
             await message.reply("У вас нет доступа к этой команде.")
         return

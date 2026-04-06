@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from bot.config import CURRENCIES, CURRENCY_BY_COMMAND
-from bot.handlers.common import is_admin, is_group, is_private, is_work_chat
+from bot.handlers.common import is_admin, is_admin_chat, is_group, is_private, is_work_chat
 from bot.models import async_session
 from bot.services import OperationService
 from bot.services.notifications import notify_admins_about_operation
@@ -56,11 +56,17 @@ async def _handle_currency_command(
         return
 
     user = message.from_user
+    admin = is_admin(user)
     async with async_session() as session:
         in_work_chat = await is_work_chat(message, session)
+        in_admin_chat = await is_admin_chat(message, session)
 
-        # In group chat: only allow in the registered work chat
-        if is_group(message) and not in_work_chat:
+        # In group chat: only allow in work chat or admin chat
+        if is_group(message) and not in_work_chat and not in_admin_chat:
+            return
+
+        # Admin chat — only admins can use commands
+        if in_admin_chat and not admin:
             return
 
         op_svc = OperationService(session)
@@ -77,18 +83,18 @@ async def _handle_currency_command(
     formatted = format_amount(amount)
     kb = _revert_keyboard(operation.operation_id)
 
-    # In group chat — short confirmation with revert button
     if in_work_chat:
+        # Work chat — short confirmation + notify admins
         await message.reply(f"✅ Запомнил. {formatted}", reply_markup=kb)
-        # Notify all admins about the operation
         async with async_session() as notify_session:
             await notify_admins_about_operation(
                 bot,
                 operation,
                 notify_session,
+                exclude_user_id=user.id if admin else None,
             )
     else:
-        # Private chat (admin) — show balance + revert button
+        # Private chat or admin chat — show balance + revert button
         await message.reply(
             f"✅ Запомнил. {formatted}\n"
             f"{currency.emoji} Баланс: {format_amount(new_balance)} {currency.title.lower()}",

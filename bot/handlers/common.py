@@ -58,11 +58,16 @@ async def cmd_info(message: Message) -> None:
     if is_private(message) and not is_admin(message.from_user):
         return
 
+    in_admin_grp = False
+    if is_group(message):
+        async with async_session() as session:
+            in_admin_grp = await is_admin_chat(message, session)
+
     currency_lines = "\n".join(
         f"  {c.emoji} {c.title} — <code>/{c.command} [сумма]</code>" for c in CURRENCIES
     )
 
-    if is_private(message):
+    if is_private(message) or in_admin_grp:
         text = (
             "ℹ️ <b>Доступные команды:</b>\n\n"
             f"💰 <b>Операции</b> (после команды укажите сумму):\n{currency_lines}\n\n"
@@ -119,3 +124,19 @@ async def is_work_chat(message: Message, session: AsyncSession) -> bool:
     repo = SettingsRepo(session)
     work_id = await repo.get_work_chat_id()
     return work_id is not None and message.chat.id == work_id
+
+
+async def is_admin_chat(message: Message, session: AsyncSession) -> bool:
+    """Check if the message comes from the registered admin chat."""
+    if not is_group(message):
+        return False
+    repo = SettingsRepo(session)
+    admin_id = await repo.get_admin_chat_id()
+    return admin_id is not None and message.chat.id == admin_id
+
+
+def is_admin_context(message: Message, *, in_admin_chat: bool = False) -> bool:
+    """True if the message is in private admin chat or admin group."""
+    if is_private(message) and is_admin(message.from_user):
+        return True
+    return in_admin_chat and is_admin(message.from_user)

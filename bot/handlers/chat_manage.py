@@ -1,4 +1,4 @@
-"""Handle bot being added/removed from group chats."""
+"""Handle bot being added/removed from group chats + chat type commands."""
 
 from __future__ import annotations
 
@@ -7,13 +7,14 @@ import logging
 from aiogram import Bot, Router
 from aiogram.filters import (
     ChatMemberUpdatedFilter,
+    Command,
     IS_NOT_MEMBER,
     MEMBER,
     ADMINISTRATOR,
 )
-from aiogram.types import ChatMemberUpdated
+from aiogram.types import ChatMemberUpdated, Message
 
-from bot.handlers.common import is_admin
+from bot.handlers.common import is_admin, is_group
 from bot.models import async_session
 from bot.repositories.settings_repo import SettingsRepo
 
@@ -31,7 +32,7 @@ async def on_bot_added(event: ChatMemberUpdated, bot: Bot) -> None:
     if event.chat.type not in ("group", "supergroup"):
         return
 
-    # Only admins can register the work chat
+    # Only admins can add the bot
     if not is_admin(event.from_user):
         logger.warning(
             "Non-admin %s (%s) tried to add bot to chat %s. Leaving.",
@@ -45,15 +46,15 @@ async def on_bot_added(event: ChatMemberUpdated, bot: Bot) -> None:
         await bot.leave_chat(event.chat.id)
         return
 
-    async with async_session() as session:
-        repo = SettingsRepo(session)
-        await repo.set_work_chat_id(event.chat.id)
-        await session.commit()
-
-    logger.info("Work chat set to %s by admin %s", event.chat.id, event.from_user.id)
     await bot.send_message(
-        event.chat.id, f"✅ Рабочий чат установлен (ID: {event.chat.id})."
+        event.chat.id,
+        "✅ Бот добавлен.\n\n"
+        "Назначьте тип чата командой:\n"
+        "  <code>/сотрудники</code> — рабочий чат сотрудников\n"
+        "  <code>/админы</code> — чат администраторов",
+        parse_mode="HTML",
     )
+    logger.info("Bot added to chat %s by admin %s", event.chat.id, event.from_user.id)
 
 
 @router.my_chat_member(
@@ -65,8 +66,43 @@ async def on_bot_removed(event: ChatMemberUpdated) -> None:
     """Bot was removed from a group chat."""
     async with async_session() as session:
         repo = SettingsRepo(session)
-        current = await repo.get_work_chat_id()
-        if current == event.chat.id:
+        work_id = await repo.get_work_chat_id()
+        admin_id = await repo.get_admin_chat_id()
+        if work_id == event.chat.id:
             await repo.delete("work_chat_id")
-            await session.commit()
             logger.info("Work chat %s unregistered (bot removed).", event.chat.id)
+        if admin_id == event.chat.id:
+            await repo.delete("admin_chat_id")
+            logger.info("Admin chat %s unregistered (bot removed).", event.chat.id)
+        await session.commit()
+
+
+# ── Chat type commands ───────────────────────────────────────────
+
+
+@router.message(Command("сотрудники"))
+async def cmd_set_work_chat(message: Message) -> None:
+    if not is_group(message) or not is_admin(message.from_user):
+        return
+
+    async with async_session() as session:
+        repo = SettingsRepo(session)
+        await repo.set_work_chat_id(message.chat.id)
+        await session.commit()
+
+    logger.info("Work chat set to %s by admin %s", message.chat.id, message.from_user.id)
+    await message.answer(f"✅ Рабочий чат сотрудников установлен (ID: {message.chat.id}).")
+
+
+@router.message(Command("админы"))
+async def cmd_set_admin_chat(message: Message) -> None:
+    if not is_group(message) or not is_admin(message.from_user):
+        return
+
+    async with async_session() as session:
+        repo = SettingsRepo(session)
+        await repo.set_admin_chat_id(message.chat.id)
+        await session.commit()
+
+    logger.info("Admin chat set to %s by admin %s", message.chat.id, message.from_user.id)
+    await message.answer(f"✅ Чат администраторов установлен (ID: {message.chat.id}).")
