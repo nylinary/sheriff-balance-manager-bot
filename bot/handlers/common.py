@@ -8,7 +8,9 @@ from aiogram.types import Message, User
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.config import CURRENCIES, settings
+from bot.models import async_session
 from bot.repositories.settings_repo import SettingsRepo
+from bot.repositories.user_repo import UserRepo
 
 router = Router(name="common")
 
@@ -21,6 +23,17 @@ async def cmd_start(message: Message) -> None:
     if not is_admin(message.from_user):
         await message.answer("У вас нет доступа к этому боту.")
         return
+
+    # Save admin user to DB so we can look up their telegram_id by username
+    user = message.from_user
+    async with async_session() as session:
+        user_repo = UserRepo(session)
+        await user_repo.get_or_create(
+            telegram_id=user.id,
+            username=user.username,
+            full_name=user.full_name,
+        )
+        await session.commit()
 
     currency_lines = "\n".join(
         f"  {c.emoji} {c.title} — <code>/{c.command}</code>" for c in CURRENCIES

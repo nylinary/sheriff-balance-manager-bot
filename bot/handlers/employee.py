@@ -82,11 +82,13 @@ async def _handle_currency_command(
     if in_work_chat:
         await message.reply(f"✅ Запомнил. {formatted}", reply_markup=kb)
         # Notify admins about the operation (exclude the user if they are admin)
-        await notify_admins_about_operation(
-            bot,
-            operation,
-            exclude_user_id=user.id if admin else None,
-        )
+        async with async_session() as notify_session:
+            await notify_admins_about_operation(
+                bot,
+                operation,
+                notify_session,
+                exclude_user_id=user.id if admin else None,
+            )
     else:
         # Private chat (admin) — show balance + revert button
         await message.reply(

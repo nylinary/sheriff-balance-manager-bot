@@ -8,9 +8,12 @@ from datetime import datetime
 
 from aiogram import Bot
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.config import CURRENCY_BY_CODE, settings
 from bot.models.operation import Operation
+from bot.models.user import User
 from bot.utils import format_amount
 
 logger = logging.getLogger(__name__)
@@ -50,9 +53,25 @@ def _notification_keyboard(operation_id: int) -> InlineKeyboardMarkup:
     )
 
 
+async def _collect_admin_ids(session: AsyncSession) -> set[int]:
+    """Collect admin telegram IDs from settings + DB (by username)."""
+    ids: set[int] = set(settings.admin_ids)
+
+    if settings.admin_usernames:
+        stmt = select(User.telegram_id).where(
+            func.lower(User.username).in_(settings.admin_usernames)
+        )
+        result = await session.execute(stmt)
+        for (tid,) in result.all():
+            ids.add(tid)
+
+    return ids
+
+
 async def notify_admins_about_operation(
     bot: Bot,
     operation: Operation,
+    session: AsyncSession,
     exclude_user_id: int | None = None,
 ) -> None:
     """Send operation notification to all admins.
@@ -62,7 +81,7 @@ async def notify_admins_about_operation(
     text = _build_notification_text(operation, operation.created_at)
     kb = _notification_keyboard(operation.operation_id)
 
-    admin_ids = settings.admin_ids
+    admin_ids = await _collect_admin_ids(session)
 
     for admin_id in admin_ids:
         if admin_id == exclude_user_id:
