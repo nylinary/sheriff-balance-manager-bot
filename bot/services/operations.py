@@ -78,13 +78,9 @@ class OperationService:
             raise ValueError("Операция уже откатана.")
 
         is_own = original.telegram_user_id == reverted_by_telegram_id
-        original_is_admin = original.role_snapshot == "admin"
 
-        if not is_own:
-            if not is_admin_user:
-                raise ValueError("Можно откатить только свою операцию.")
-            if original_is_admin:
-                raise ValueError("Нельзя откатить операцию другого администратора.")
+        if not is_own and not is_admin_user:
+            raise ValueError("Можно откатить только свою операцию.")
 
         reverse_amount = -original.amount
 
