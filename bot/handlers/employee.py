@@ -7,7 +7,13 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from bot.config import CURRENCIES, CURRENCY_BY_COMMAND
-from bot.handlers.common import is_admin, is_admin_chat, is_group, is_private, is_work_chat
+from bot.handlers.common import (
+    is_admin,
+    is_admin_chat,
+    is_group,
+    is_private,
+    is_work_chat,
+)
 from bot.models import async_session
 from bot.services import OperationService
 from bot.services.notifications import notify_admins_about_operation

@@ -87,11 +87,28 @@ async def cmd_set_work_chat(message: Message) -> None:
 
     async with async_session() as session:
         repo = SettingsRepo(session)
+
+        # Don't allow changing if already registered as admin chat
+        admin_id = await repo.get_admin_chat_id()
+        if admin_id == message.chat.id:
+            await message.answer("❌ Этот чат уже зарегистрирован как админский.")
+            return
+
+        # Don't allow re-registering
+        work_id = await repo.get_work_chat_id()
+        if work_id == message.chat.id:
+            await message.answer("ℹ️ Этот чат уже зарегистрирован как рабочий.")
+            return
+
         await repo.set_work_chat_id(message.chat.id)
         await session.commit()
 
-    logger.info("Work chat set to %s by admin %s", message.chat.id, message.from_user.id)
-    await message.answer(f"✅ Рабочий чат сотрудников установлен (ID: {message.chat.id}).")
+    logger.info(
+        "Work chat set to %s by admin %s", message.chat.id, message.from_user.id
+    )
+    await message.answer(
+        f"✅ Рабочий чат сотрудников установлен (ID: {message.chat.id})."
+    )
 
 
 @router.message(Command("админы"))
@@ -101,8 +118,23 @@ async def cmd_set_admin_chat(message: Message) -> None:
 
     async with async_session() as session:
         repo = SettingsRepo(session)
+
+        # Don't allow changing if already registered as work chat
+        work_id = await repo.get_work_chat_id()
+        if work_id == message.chat.id:
+            await message.answer("❌ Этот чат уже зарегистрирован как рабочий.")
+            return
+
+        # Don't allow re-registering
+        admin_id = await repo.get_admin_chat_id()
+        if admin_id == message.chat.id:
+            await message.answer("ℹ️ Этот чат уже зарегистрирован как админский.")
+            return
+
         await repo.set_admin_chat_id(message.chat.id)
         await session.commit()
 
-    logger.info("Admin chat set to %s by admin %s", message.chat.id, message.from_user.id)
+    logger.info(
+        "Admin chat set to %s by admin %s", message.chat.id, message.from_user.id
+    )
     await message.answer(f"✅ Чат администраторов установлен (ID: {message.chat.id}).")
