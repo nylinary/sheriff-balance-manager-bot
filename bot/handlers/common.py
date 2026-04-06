@@ -55,19 +55,30 @@ async def cmd_start(message: Message) -> None:
 
 @router.message(Command("инфо"))
 async def cmd_info(message: Message) -> None:
-    if not is_group(message):
+    if is_private(message) and not is_admin(message.from_user):
         return
 
     currency_lines = "\n".join(
         f"  {c.emoji} {c.title} — <code>/{c.command} [сумма]</code>" for c in CURRENCIES
     )
 
-    text = (
-        "ℹ️ <b>Доступные команды:</b>\n\n"
-        f"💰 <b>Операции</b> (положительная сумма — приход, отрицательная — расход):\n{currency_lines}\n\n"
-        "<code>/счета</code> — список доступных валют\n"
-        "<code>/инфо</code> — эта справка"
-    )
+    if is_private(message):
+        text = (
+            "ℹ️ <b>Доступные команды:</b>\n\n"
+            f"💰 <b>Операции</b> (после команды укажите сумму):\n{currency_lines}\n\n"
+            "<code>/счета</code> — список доступных валют\n"
+            "<code>/дай</code> — текущие балансы\n"
+            "<code>/история</code> — история операций\n"
+            "<code>/выгрузка</code> — выгрузка в Excel\n"
+            "<code>/инфо</code> — эта справка"
+        )
+    else:
+        text = (
+            "ℹ️ <b>Доступные команды:</b>\n\n"
+            f"💰 <b>Операции</b> (положительная сумма — приход, отрицательная — расход):\n{currency_lines}\n\n"
+            "<code>/счета</code> — список доступных валют\n"
+            "<code>/инфо</code> — эта справка"
+        )
     await message.answer(text, parse_mode="HTML")
 
 
