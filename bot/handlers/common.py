@@ -40,6 +40,24 @@ async def cmd_start(message: Message) -> None:
     await message.answer(text, parse_mode="HTML")
 
 
+@router.message(Command("инфо"))
+async def cmd_info(message: Message) -> None:
+    if not is_group(message):
+        return
+
+    currency_lines = "\n".join(
+        f"  {c.emoji} {c.title} — <code>/{c.command} [сумма]</code>" for c in CURRENCIES
+    )
+
+    text = (
+        "ℹ️ <b>Доступные команды:</b>\n\n"
+        f"💰 <b>Операции</b> (положительная сумма — приход, отрицательная — расход):\n{currency_lines}\n\n"
+        "<code>/счета</code> — список доступных валют\n"
+        "<code>/инфо</code> — эта справка"
+    )
+    await message.answer(text, parse_mode="HTML")
+
+
 @router.message(Command("счета"))
 async def cmd_currencies(message: Message) -> None:
     if is_private(message) and not is_admin(message.from_user):
