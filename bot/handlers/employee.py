@@ -90,7 +90,7 @@ async def _handle_currency_command(
     kb = _revert_keyboard(operation.operation_id)
 
     if in_work_chat:
-        # Work chat — short confirmation + notify admins
+        # Work chat — short confirmation + notify admins (private + admin chat)
         await message.reply(f"✅ Запомнил. {formatted}", reply_markup=kb)
         async with async_session() as notify_session:
             await notify_admins_about_operation(
@@ -100,12 +100,20 @@ async def _handle_currency_command(
                 exclude_user_id=user.id if admin else None,
             )
     else:
-        # Private chat or admin chat — show balance + revert button
+        # Private chat or admin chat — show balance + revert button + notify
         await message.reply(
             f"✅ Запомнил. {formatted}\n"
             f"{currency.emoji} Баланс: {format_amount(new_balance)} {currency.title.lower()}",
             reply_markup=kb,
         )
+        async with async_session() as notify_session:
+            await notify_admins_about_operation(
+                bot,
+                operation,
+                notify_session,
+                exclude_user_id=user.id,
+                exclude_chat_id=message.chat.id if in_admin_chat else None,
+            )
 
 
 def _register_currency_commands() -> None:

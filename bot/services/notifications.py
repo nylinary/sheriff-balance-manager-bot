@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot.config import CURRENCY_BY_CODE, settings
 from bot.models.operation import Operation
 from bot.models.user import User
+from bot.repositories.settings_repo import SettingsRepo
 from bot.utils import format_amount
 
 logger = logging.getLogger(__name__)
@@ -73,10 +74,12 @@ async def notify_admins_about_operation(
     operation: Operation,
     session: AsyncSession,
     exclude_user_id: int | None = None,
+    exclude_chat_id: int | None = None,
 ) -> None:
-    """Send operation notification to all admins.
+    """Send operation notification to all admins + admin chat.
 
     exclude_user_id — skip this admin (e.g. if the admin made the operation themselves).
+    exclude_chat_id — skip this chat (e.g. if the operation was made in the admin chat).
     """
     text = _build_notification_text(operation, operation.created_at)
     kb = _notification_keyboard(operation.operation_id)
@@ -90,3 +93,14 @@ async def notify_admins_about_operation(
             await bot.send_message(admin_id, text, parse_mode="HTML", reply_markup=kb)
         except Exception:
             logger.debug("Could not send notification to admin %s", admin_id)
+
+    # Also send to admin chat if registered (and not excluded)
+    repo = SettingsRepo(session)
+    admin_chat_id = await repo.get_admin_chat_id()
+    if admin_chat_id and admin_chat_id != exclude_chat_id:
+        try:
+            await bot.send_message(
+                admin_chat_id, text, parse_mode="HTML", reply_markup=kb
+            )
+        except Exception:
+            logger.debug("Could not send notification to admin chat %s", admin_chat_id)
