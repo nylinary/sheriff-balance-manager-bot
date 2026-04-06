@@ -45,9 +45,7 @@ class Operation(Base):
     reverted_by_telegram_id: Mapped[int | None] = mapped_column(
         BigInteger, nullable=True
     )
-    reverted_by_username: Mapped[str | None] = mapped_column(
-        String(255), nullable=True
-    )
+    reverted_by_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     reverted_by_full_name: Mapped[str | None] = mapped_column(
         String(512), nullable=True
     )

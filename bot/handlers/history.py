@@ -174,7 +174,11 @@ async def cb_open_operation(callback: CallbackQuery) -> None:
 
     reverted_by_info = ""
     if op.is_reverted and op.reverted_by_telegram_id:
-        rb_name = f"@{op.reverted_by_username}" if op.reverted_by_username else (op.reverted_by_full_name or "—")
+        rb_name = (
+            f"@{op.reverted_by_username}"
+            if op.reverted_by_username
+            else (op.reverted_by_full_name or "—")
+        )
         reverted_by_info = f"\nОткатил: {rb_name}"
 
     text = (

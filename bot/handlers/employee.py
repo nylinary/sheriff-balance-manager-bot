@@ -29,7 +29,9 @@ def _revert_keyboard(operation_id: int) -> InlineKeyboardMarkup:
     )
 
 
-async def _handle_currency_command(message: Message, command_text: str, bot: Bot) -> None:
+async def _handle_currency_command(
+    message: Message, command_text: str, bot: Bot
+) -> None:
     currency = CURRENCY_BY_COMMAND.get(command_text)
     if currency is None:
         return
