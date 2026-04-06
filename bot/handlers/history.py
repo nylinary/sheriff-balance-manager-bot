@@ -172,6 +172,11 @@ async def cb_open_operation(callback: CallbackQuery) -> None:
     if op.revert_parent_operation_id:
         revert_info = f"\nОткат операции: #{op.revert_parent_operation_id}"
 
+    reverted_by_info = ""
+    if op.is_reverted and op.reverted_by_telegram_id:
+        rb_name = f"@{op.reverted_by_username}" if op.reverted_by_username else (op.reverted_by_full_name or "—")
+        reverted_by_info = f"\nОткатил: {rb_name}"
+
     text = (
         f"ID операции: {op.operation_id}\n"
         f"Дата: {date_str}\n"
@@ -183,6 +188,7 @@ async def cb_open_operation(callback: CallbackQuery) -> None:
         f"Тип: {op.operation_type.value}\n"
         f"Статус: {status}"
         f"{revert_info}"
+        f"{reverted_by_info}"
     )
 
     kb = operation_card_keyboard(

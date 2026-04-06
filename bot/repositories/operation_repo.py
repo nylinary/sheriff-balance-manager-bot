@@ -59,11 +59,22 @@ class OperationRepo:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def mark_reverted(self, operation_id: int, revert_op_id: int) -> None:
+    async def mark_reverted(
+        self,
+        operation_id: int,
+        revert_op_id: int,
+        *,
+        reverted_by_telegram_id: int | None = None,
+        reverted_by_username: str | None = None,
+        reverted_by_full_name: str | None = None,
+    ) -> None:
         op = await self.get_by_operation_id(operation_id)
         if op:
             op.is_reverted = True
             op.reverted_operation_id = revert_op_id
+            op.reverted_by_telegram_id = reverted_by_telegram_id
+            op.reverted_by_username = reverted_by_username
+            op.reverted_by_full_name = reverted_by_full_name
             await self.session.flush()
 
     async def count(self, username_filter: str | None = None) -> int:

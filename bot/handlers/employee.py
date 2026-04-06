@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from aiogram import Router
+from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
@@ -10,6 +10,7 @@ from bot.config import CURRENCIES, CURRENCY_BY_COMMAND
 from bot.handlers.common import is_admin, is_group, is_private, is_work_chat
 from bot.models import async_session
 from bot.services import OperationService
+from bot.services.notifications import notify_admins_about_operation
 from bot.utils import format_amount, parse_amount
 
 router = Router(name="employee")
@@ -28,7 +29,7 @@ def _revert_keyboard(operation_id: int) -> InlineKeyboardMarkup:
     )
 
 
-async def _handle_currency_command(message: Message, command_text: str) -> None:
+async def _handle_currency_command(message: Message, command_text: str, bot: Bot) -> None:
     currency = CURRENCY_BY_COMMAND.get(command_text)
     if currency is None:
         return
@@ -53,6 +54,7 @@ async def _handle_currency_command(message: Message, command_text: str) -> None:
         return
 
     user = message.from_user
+    admin = is_admin(user)
     async with async_session() as session:
         in_work_chat = await is_work_chat(message, session)
 
@@ -77,6 +79,12 @@ async def _handle_currency_command(message: Message, command_text: str) -> None:
     # In group chat — short confirmation with revert button
     if in_work_chat:
         await message.reply(f"✅ Запомнил. {formatted}", reply_markup=kb)
+        # Notify admins about the operation (exclude the user if they are admin)
+        await notify_admins_about_operation(
+            bot,
+            operation,
+            exclude_user_id=user.id if admin else None,
+        )
     else:
         # Private chat (admin) — show balance + revert button
         await message.reply(
@@ -90,8 +98,8 @@ def _register_currency_commands() -> None:
     for cur in CURRENCIES:
         cmd = cur.command
 
-        async def handler(message: Message, _cmd: str = cmd) -> None:
-            await _handle_currency_command(message, _cmd)
+        async def handler(message: Message, bot: Bot, _cmd: str = cmd) -> None:
+            await _handle_currency_command(message, _cmd, bot)
 
         router.message.register(handler, Command(cmd))
 

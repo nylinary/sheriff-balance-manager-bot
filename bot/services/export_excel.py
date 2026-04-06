@@ -27,6 +27,9 @@ COLUMNS = [
     "ID отката",
     "ID родительской операции",
     "Роль",
+    "Откатил (Telegram ID)",
+    "Откатил (username)",
+    "Откатил (имя)",
 ]
 
 
@@ -61,6 +64,9 @@ def build_excel(operations: list[Operation]) -> tuple[io.BytesIO, str]:
                 op.reverted_operation_id,
                 op.revert_parent_operation_id,
                 op.role_snapshot,
+                op.reverted_by_telegram_id,
+                op.reverted_by_username,
+                op.reverted_by_full_name,
             ]
         )
 

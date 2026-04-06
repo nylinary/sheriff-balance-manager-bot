@@ -46,7 +46,7 @@ async def cb_revert(callback: CallbackQuery) -> None:
                 reverted_by_telegram_id=user.id,
                 reverted_by_username=user.username,
                 reverted_by_full_name=user.full_name,
-                only_own_user_id=None if admin else user.id,
+                is_admin_user=admin,
             )
         except ValueError as e:
             await callback.answer(str(e), show_alert=True)

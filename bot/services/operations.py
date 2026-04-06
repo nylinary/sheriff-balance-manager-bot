@@ -59,12 +59,14 @@ class OperationService:
         reverted_by_telegram_id: int,
         reverted_by_username: str | None,
         reverted_by_full_name: str | None,
-        only_own_user_id: int | None = None,
+        is_admin_user: bool = False,
     ) -> tuple[Operation, Operation, int]:
         """Create a revert operation for the given operation.
 
         Returns (original_op, revert_op, new_balance).
-        If only_own_user_id is set, only allows reverting own operations.
+        Admins can revert non-admin operations and their own operations.
+        Admins cannot revert other admins' operations.
+        Non-admins can only revert their own operations.
         Raises ValueError if operation not found or already reverted.
         """
         original = await self.op_repo.get_by_operation_id(operation_id)
@@ -74,8 +76,15 @@ class OperationService:
             raise ValueError("Нельзя откатить операцию отката.")
         if original.is_reverted:
             raise ValueError("Операция уже откатана.")
-        if only_own_user_id is not None and original.telegram_user_id != only_own_user_id:
-            raise ValueError("Можно откатить только свою операцию.")
+
+        is_own = original.telegram_user_id == reverted_by_telegram_id
+        original_is_admin = original.role_snapshot == "admin"
+
+        if not is_own:
+            if not is_admin_user:
+                raise ValueError("Можно откатить только свою операцию.")
+            if original_is_admin:
+                raise ValueError("Нельзя откатить операцию другого администратора.")
 
         reverse_amount = -original.amount
 
@@ -83,7 +92,7 @@ class OperationService:
             telegram_user_id=reverted_by_telegram_id,
             username=reverted_by_username,
             full_name=reverted_by_full_name,
-            role_snapshot="admin" if only_own_user_id is None else "employee",
+            role_snapshot="admin" if is_admin_user else "employee",
             chat_id=0,
             chat_type="private",
             currency_code=original.currency_code,
@@ -94,7 +103,13 @@ class OperationService:
             revert_parent_operation_id=original.operation_id,
         )
 
-        await self.op_repo.mark_reverted(original.operation_id, revert_op.operation_id)
+        await self.op_repo.mark_reverted(
+            original.operation_id,
+            revert_op.operation_id,
+            reverted_by_telegram_id=reverted_by_telegram_id,
+            reverted_by_username=reverted_by_username,
+            reverted_by_full_name=reverted_by_full_name,
+        )
 
         balance = await self.balance_repo.update_amount(
             original.currency_code, reverse_amount
