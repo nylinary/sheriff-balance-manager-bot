@@ -18,7 +18,7 @@ router = Router(name="access")
 logger = logging.getLogger(__name__)
 
 
-@router.message(Command("открытьд"))
+@router.message(Command("открытьд", ignore_case=True))
 async def cmd_open_access(message: Message, command: CommandObject) -> None:
     if not is_private(message) or not is_admin(message.from_user):
         if is_private(message):
@@ -51,7 +51,7 @@ async def cmd_open_access(message: Message, command: CommandObject) -> None:
     await message.answer(f"✅ Доступ открыт на период {f}-{t}.")
 
 
-@router.message(Command("закрытьд"))
+@router.message(Command("закрытьд", ignore_case=True))
 async def cmd_close_access(message: Message) -> None:
     if not is_private(message) or not is_admin(message.from_user):
         if is_private(message):

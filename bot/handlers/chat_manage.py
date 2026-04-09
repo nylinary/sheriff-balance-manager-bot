@@ -80,7 +80,7 @@ async def on_bot_removed(event: ChatMemberUpdated) -> None:
 # ── Chat type commands ───────────────────────────────────────────
 
 
-@router.message(Command("сотрудники"))
+@router.message(Command("сотрудники", ignore_case=True))
 async def cmd_set_work_chat(message: Message) -> None:
     if not is_group(message) or not is_admin(message.from_user):
         return
@@ -111,7 +111,7 @@ async def cmd_set_work_chat(message: Message) -> None:
     )
 
 
-@router.message(Command("админы"))
+@router.message(Command("админы", ignore_case=True))
 async def cmd_set_admin_chat(message: Message) -> None:
     if not is_group(message) or not is_admin(message.from_user):
         return

@@ -28,7 +28,7 @@ class PageInputState(StatesGroup):
 # ── /история ──────────────────────────────────────────────────────
 
 
-@router.message(Command("история"))
+@router.message(Command("история", ignore_case=True))
 async def cmd_history(message: Message, state: FSMContext) -> None:
     async with async_session() as session:
         in_admin_chat = await is_admin_chat(message, session)

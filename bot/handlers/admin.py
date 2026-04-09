@@ -64,7 +64,7 @@ async def cb_revert(callback: CallbackQuery) -> None:
 # ── Excel export ──────────────────────────────────────────────────
 
 
-@router.message(Command("выгрузка", "excel"))
+@router.message(Command("выгрузка", "excel", ignore_case=True))
 async def cmd_export(message: Message) -> None:
     async with async_session() as session:
         in_admin_chat = await is_admin_chat(message, session)

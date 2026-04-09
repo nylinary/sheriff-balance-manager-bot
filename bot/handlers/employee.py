@@ -123,7 +123,7 @@ def _register_currency_commands() -> None:
         async def handler(message: Message, bot: Bot, _cmd: str = cmd) -> None:
             await _handle_currency_command(message, _cmd, bot)
 
-        router.message.register(handler, Command(cmd))
+        router.message.register(handler, Command(cmd, ignore_case=True))
 
 
 _register_currency_commands()

@@ -53,7 +53,7 @@ async def cmd_start(message: Message) -> None:
     await message.answer(text, parse_mode="HTML")
 
 
-@router.message(Command("инфо"))
+@router.message(Command("инфо", ignore_case=True))
 async def cmd_info(message: Message) -> None:
     if is_private(message) and not is_admin(message.from_user):
         return
@@ -93,7 +93,7 @@ async def cmd_info(message: Message) -> None:
     await message.answer(text, parse_mode="HTML")
 
 
-@router.message(Command("счета"))
+@router.message(Command("счета", ignore_case=True))
 async def cmd_currencies(message: Message) -> None:
     if is_private(message) and not is_admin(message.from_user):
         return

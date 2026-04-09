@@ -13,7 +13,7 @@ from bot.services import BalanceService
 router = Router(name="wallet")
 
 
-@router.message(Command("кошелек", "дай"))
+@router.message(Command("кошелек", "дай", ignore_case=True))
 async def cmd_wallet(message: Message) -> None:
     async with async_session() as session:
         in_admin_chat = await is_admin_chat(message, session)
