@@ -89,11 +89,12 @@ async def _handle_currency_command(
         )
 
     formatted = format_amount(amount)
+    comment_line = f"\n💬 Комментарий: {comment}" if comment else ""
     kb = _revert_keyboard(operation.operation_id)
 
     if in_work_chat:
         # Work chat — short confirmation + notify admins (private + admin chat)
-        await message.reply(f"✅ Запомнил. {formatted}", reply_markup=kb)
+        await message.reply(f"✅ Запомнил. {formatted}{comment_line}", reply_markup=kb)
         async with async_session() as notify_session:
             await notify_admins_about_operation(
                 bot,
@@ -105,7 +106,8 @@ async def _handle_currency_command(
         # Private chat or admin chat — show balance + revert button + notify
         await message.reply(
             f"✅ Запомнил. {formatted}\n"
-            f"{currency.emoji} Баланс: {format_amount(new_balance)} {currency.title.lower()}",
+            f"{currency.emoji} Баланс: {format_amount(new_balance)} {currency.title.lower()}"
+            f"{comment_line}",
             reply_markup=kb,
         )
         async with async_session() as notify_session:

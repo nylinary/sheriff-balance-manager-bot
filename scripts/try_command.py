@@ -83,8 +83,15 @@ def main(argv: list[str]) -> int:
     )
     op.created_at = now()
 
+    comment_line = f"\n💬 Комментарий: {comment}" if comment else ""
     print("\n--- Employee reply (work chat, plain text) ---")
-    print(f"✅ Запомнил. {format_amount(amount)}")
+    print(f"✅ Запомнил. {format_amount(amount)}{comment_line}")
+    print("\n--- Employee reply (private/admin chat, plain text) ---")
+    print(
+        f"✅ Запомнил. {format_amount(amount)}\n"
+        f"{currency.emoji} Баланс: <текущий баланс> {currency.title.lower()}"
+        f"{comment_line}"
+    )
 
     print("\n--- Admin chat notification (parse_mode=HTML) ---")
     print(_build_notification_text(op, op.created_at))
