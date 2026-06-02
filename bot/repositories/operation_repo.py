@@ -31,6 +31,7 @@ class OperationRepo:
         reverted_operation_id: int | None = None,
         revert_parent_operation_id: int | None = None,
         meta_json: dict | None = None,
+        comment: str | None = None,
     ) -> Operation:
         op_id = await self._next_operation_id()
         op = Operation(
@@ -49,6 +50,7 @@ class OperationRepo:
             reverted_operation_id=reverted_operation_id,
             revert_parent_operation_id=revert_parent_operation_id,
             meta_json=meta_json,
+            comment=comment,
         )
         self.session.add(op)
         await self.session.flush()

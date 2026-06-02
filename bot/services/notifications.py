@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import logging
 import zoneinfo
 from datetime import datetime
@@ -32,13 +33,17 @@ def _build_notification_text(operation: Operation, dt: datetime) -> str:
     user_display = operation.full_name or "—"
     if operation.username:
         user_display += f" (@{operation.username})"
+    user_display = html.escape(user_display)
 
-    return (
+    text = (
         f"🔔 <b>Уведомление</b>\n\n"
         f"📅 {date_str}\n"
         f"👤 {user_display}\n"
         f"{cur_emoji} {cur_title}: <b>{format_amount(operation.amount)}</b>"
     )
+    if operation.comment:
+        text += f"\n💬 {html.escape(operation.comment)}"
+    return text
 
 
 def _notification_keyboard(operation_id: int) -> InlineKeyboardMarkup:

@@ -30,6 +30,7 @@ COLUMNS = [
     "Откатил (Telegram ID)",
     "Откатил (username)",
     "Откатил (имя)",
+    "Комментарий",
 ]
 
 
@@ -67,6 +68,7 @@ def build_excel(operations: list[Operation]) -> tuple[io.BytesIO, str]:
                 op.reverted_by_telegram_id,
                 op.reverted_by_username,
                 op.reverted_by_full_name,
+                op.comment,
             ]
         )
 

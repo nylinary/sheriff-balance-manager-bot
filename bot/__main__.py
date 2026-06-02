@@ -25,11 +25,12 @@ async def on_startup() -> None:
         await conn.execute(
             sqlalchemy.text("CREATE SEQUENCE IF NOT EXISTS operation_id_seq START 1")
         )
-        # Add reverted_by columns if they don't exist yet
+        # Add columns added after the initial schema if they don't exist yet
         for col, col_type in [
             ("reverted_by_telegram_id", "BIGINT"),
             ("reverted_by_username", "VARCHAR(255)"),
             ("reverted_by_full_name", "VARCHAR(512)"),
+            ("comment", "VARCHAR(500)"),
         ]:
             await conn.execute(
                 sqlalchemy.text(

@@ -17,7 +17,7 @@ from bot.handlers.common import (
 from bot.models import async_session
 from bot.services import OperationService
 from bot.services.notifications import notify_admins_about_operation
-from bot.utils import format_amount, parse_amount
+from bot.utils import format_amount, parse_amount_and_comment
 
 router = Router(name="employee")
 
@@ -56,10 +56,11 @@ async def _handle_currency_command(
         await message.reply("Некорректная сумма. Укажите целое число.")
         return
 
-    amount = parse_amount(parts[1])
-    if amount is None:
+    parsed = parse_amount_and_comment(parts[1])
+    if parsed is None:
         await message.reply("Некорректная сумма. Укажите целое число.")
         return
+    amount, comment = parsed
 
     user = message.from_user
     admin = is_admin(user)
@@ -84,6 +85,7 @@ async def _handle_currency_command(
             chat_type=message.chat.type,
             currency=currency,
             amount=amount,
+            comment=comment,
         )
 
     formatted = format_amount(amount)

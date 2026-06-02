@@ -13,6 +13,9 @@ dependencies = [
     "redis>=5.0,<6",
 ]
 
+[dependency-groups]
+dev = ["pytest>=8,<9"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

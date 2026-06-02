@@ -24,6 +24,7 @@ class OperationService:
         chat_type: str,
         currency: Currency,
         amount: int,
+        comment: str | None = None,
     ) -> tuple[Operation, int]:
         """Create operation and update balance. Returns (operation, new_balance)."""
         user = await self.user_repo.get_or_create(
@@ -46,6 +47,7 @@ class OperationService:
             currency_command=currency.command,
             amount=amount,
             operation_type=op_type,
+            comment=comment,
         )
 
         balance = await self.balance_repo.update_amount(currency.code, amount)

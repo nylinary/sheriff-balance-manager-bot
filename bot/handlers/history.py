@@ -184,6 +184,8 @@ async def cb_open_operation(callback: CallbackQuery) -> None:
         )
         reverted_by_info = f"\nОткатил: {rb_name}"
 
+    comment_info = f"\nКомментарий: {op.comment}" if op.comment else ""
+
     text = (
         f"ID операции: {op.operation_id}\n"
         f"Дата: {date_str}\n"
@@ -196,6 +198,7 @@ async def cb_open_operation(callback: CallbackQuery) -> None:
         f"Статус: {status}"
         f"{revert_info}"
         f"{reverted_by_info}"
+        f"{comment_info}"
     )
 
     kb = operation_card_keyboard(
